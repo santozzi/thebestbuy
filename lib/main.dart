@@ -1,5 +1,5 @@
-import 'package:bestbuy/screens/explore_screen.dart';
-import 'package:bestbuy/screens/home.dart';
+import 'package:bestbuy/presentation/screens/explore_screen.dart';
+import 'package:bestbuy/presentation/screens/home.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(const MyApp());

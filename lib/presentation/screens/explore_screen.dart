@@ -1,4 +1,5 @@
-import 'package:dio/dio.dart';
+import 'package:bestbuy/models/ecommerce_model.dart';
+import 'package:bestbuy/models/product_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
@@ -13,35 +14,29 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   String qrResult = 'Codigo qr';
+  List<ProductModel> products = [];
   Future<void> scanQr() async {
     final qrResult = await FlutterBarcodeScanner.scanBarcode(
         '#ff6666', 'Cancelar', true, ScanMode.QR);
     if (!mounted) return;
     setState(() {
       this.qrResult = qrResult;
-      print(qrResult);
     });
   }
 
-  final _dio = Dio();
-  final String url =
-      'https://backendlabiv-s4q1.onrender.com/api/v1/products?page=1';
-  Future<dynamic> getProducts() async {
-    try {
-      final response = await _dio.get(url);
-      return response.data;
-    } catch (e) {
-      // ignore: avoid_print
-      print(e);
-    }
+  final api = EcommerceModel();
+  Future<List<ProductModel>> productos() async {
+    return await api.getProducts();
   }
-
-  late Future<String> producto;
 
   @override
   void initState() {
     super.initState();
-    producto = getProducts().then((value) => value[0]['title']);
+    productos().then((value) {
+      setState(() {
+        products = value;
+      });
+    });
   }
 
   @override
@@ -81,19 +76,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         blurRadius: 2)
                   ])),
         ),
-        body: ListView(children: const <Widget>[
-          Card(
-              title: 'sergio',
-              price: '69.349',
-              urlImage:
-                  'https://www.lumilagro.com.ar/wp-content/uploads/2023/05/T0376LUN_1.jpg'),
+        body: ListView(children: <Widget>[
+          for (var product in products)
+            Card(
+              title: products.isNotEmpty ? product.name : 'Loading...',
+              price: products.isNotEmpty ? product.price : 0,
+              urlImage: products.isNotEmpty ? product.images[0] : 'Loading...',
+            ),
         ]));
   }
 }
 
 class Card extends StatelessWidget {
   final String title;
-  final String price;
+  final int price;
   final String urlImage;
   const Card({
     super.key,
@@ -104,24 +100,29 @@ class Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Image.network(
-            'https://www.lumilagro.com.ar/wp-content/uploads/2023/05/T0376LUN_1.jpg'),
-        const SizedBox(
-          height: 20,
-        ),
-        const Text(
-          'Termo Lumilagro Luminox Negro De Acero Inoxidable 1 L',
-          style: TextStyle(fontSize: 20),
-        ),
-        const SizedBox(
-          height: 20,
-        ),
-        Container(
-            alignment: Alignment.centerLeft,
-            child: const Text('\$69.349', style: TextStyle(fontSize: 20))),
-      ],
+    return Container(
+      width: 100,
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.all(20),
+      color: Colors.grey[200],
+      child: Column(
+        children: <Widget>[
+          Image.network(urlImage),
+          const SizedBox(
+            height: 20,
+          ),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20),
+          ),
+          const SizedBox(
+            height: 20,
+          ),
+          Container(
+              alignment: Alignment.centerLeft,
+              child: Text('\$$price', style: const TextStyle(fontSize: 20))),
+        ],
+      ),
     );
   }
 }
